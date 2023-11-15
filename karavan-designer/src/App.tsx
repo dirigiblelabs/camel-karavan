@@ -65,12 +65,17 @@ export function App() {
     const [loaded, setLoaded] = useState<boolean>(false);
 
     useEffect(() => {
+        // @ts-ignore
+        const fileName = window.getFileName();
+        // @ts-ignore
+        const baseUrl = window.getBaseUrl();
         Promise.all([
-            fetch("kamelets/kamelets.yaml"),
-            fetch("components/components.json"),
-            fetch("snippets/org.apache.camel.AggregationStrategy"),
-            fetch("snippets/org.apache.camel.Processor"),
-            fetch("example/demo.camel.yaml"),
+            fetch("designer/kamelets/kamelets.yaml"),
+            fetch("designer/components/components.json"),
+            fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
+            fetch("designer/snippets/org.apache.camel.Processor"),
+            fetch("designer/example/demo.camel.yaml"),
+            fetch(baseUrl+fileName),
             // fetch("components/blocked-components.properties"),
             // fetch("kamelets/blocked-kamelets.properties")
             // fetch("example/aws-cloudwatch-sink.kamelet.yaml")
@@ -87,12 +92,13 @@ export function App() {
             const jsons: string[] = [];
             JSON.parse(data[1]).forEach((c: any) => jsons.push(JSON.stringify(c)));
             ComponentApi.saveComponents(jsons, true);
-
+            
+            setName(fileName);
             setLoaded(true);
 
             TemplateApi.saveTemplate("org.apache.camel.AggregationStrategy", data[2]);
             TemplateApi.saveTemplate("org.apache.camel.Processor", data[3]);
-
+            
             if (data[4]) {
                 setYaml(data[4]);
                 setName("demo.camel.yaml");
@@ -107,10 +113,16 @@ export function App() {
                 ComponentApi.saveSupportedComponents(data[7]);
                 ComponentApi.setSupportedOnly(true);
             }
-           
+
         }).catch(err =>
             EventBus.sendAlert("Error", err.text, 'danger')
         );
+
+        // Attach the reference to the window object and add a cleanup function
+        (window as any).designerApp = App;
+        return () => {
+            delete (window as any).designerApp;
+        };
     });
 
     function save(filename: string, yaml: string, propertyOnly: boolean) {

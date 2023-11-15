@@ -8,6 +8,7 @@
     "prod": "react-scripts build --dest && rsync -a build/* ../resources/META-INF/resources"
   },
   "proxy": "http://localhost:8080/",
+  "homepage": "/services/web/ide-integrations/designer/",
   "eslintConfig": {
     "extends": [
       "react-app"

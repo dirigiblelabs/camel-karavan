@@ -27,6 +27,7 @@ import DownloadImageIcon from "@patternfly/react-icons/dist/esm/icons/image-icon
 import {KaravanDesigner} from "./designer/KaravanDesigner";
 import {EventBus} from "./designer/utils/EventBus";
 import {IntegrationFile} from "karavan-core/lib/model/IntegrationDefinition";
+import {useEffect} from "react";
 
 interface Props {
     name: string,
@@ -38,6 +39,15 @@ interface Props {
 export const DesignerPage = (props: Props) => {
 
     const [yaml, setYaml] = useState<string>(props.yaml);
+
+    useEffect(() => {
+        (globalThis as any).download = download;
+        (globalThis as any).getFile = getFile;
+        return () => {
+            delete (globalThis as any).download;
+            delete (globalThis as any).getFile;
+        };
+    });
 
     function save(filename: string, yaml: string, propertyOnly: boolean) {
         setYaml(yaml);
@@ -53,6 +63,15 @@ export const DesignerPage = (props: Props) => {
             a.click();
         }
     }
+
+    function getFile() {
+        const {name, yaml} = props;
+        return { 
+            'name': name, 
+            'content': yaml 
+        };
+    }
+
 
     function downloadImage() {
         EventBus.sendCommand("downloadImage");
@@ -88,7 +107,7 @@ export const DesignerPage = (props: Props) => {
 
     return (
         <PageSection className="designer-page" padding={{default: 'noPadding'}}>
-            <div className="tools-section" //padding={{default: 'noPadding'}}
+            {/*<div className="tools-section" //padding={{default: 'noPadding'}}
                  style={{paddingLeft: "var(--pf-v5-c-page__main-section--PaddingLeft)"}}>
                 <Flex className="tools" justifyContent={{default: 'justifyContentSpaceBetween'}}>
                     <FlexItem>
@@ -118,7 +137,7 @@ export const DesignerPage = (props: Props) => {
                         </Toolbar>
                     </FlexItem>
                 </Flex>
-            </div>
+            </div> */}
             {getDesigner()}
         </PageSection>
     )
