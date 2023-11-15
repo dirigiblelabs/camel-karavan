@@ -94,11 +94,16 @@ class App extends React.Component<Props, State> {
     }
 
     componentDidMount() {
+        // @ts-ignore
+        const fileName = window.getFileName();
+        // @ts-ignore
+        const baseUrl = window.getBaseUrl();
         Promise.all([
-            fetch("kamelets/kamelets.yaml"),
-            fetch("components/components.json"),
-            fetch("snippets/org.apache.camel.AggregationStrategy"),
-            fetch("snippets/org.apache.camel.Processor")
+            fetch("designer/kamelets/kamelets.yaml"),
+            fetch("designer/components/components.json"),
+            fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
+            fetch("designer/snippets/org.apache.camel.Processor"),
+            fetch(baseUrl+fileName),
             // fetch("components/supported-components.json"),
         ]).then(responses =>
             Promise.all(responses.map(response => response.text()))
@@ -113,15 +118,20 @@ class App extends React.Component<Props, State> {
             ComponentApi.saveComponents(jsons, true);
 
             this.toast("Success", "Loaded " + jsons.length + " components", 'success');
-            this.setState({loaded: true});
+            this.setState({loaded: true, yaml: data[4], name: fileName});
 
             TemplateApi.saveTemplate("org.apache.camel.AggregationStrategy", data[2]);
             TemplateApi.saveTemplate("org.apache.camel.Processor", data[3]);
 
-            if (data[4]) {
+            console.log(data[4]);
+
+            if (data[5]) {
                 ComponentApi.saveSupportedComponents(data[4]);
                 ComponentApi.setSupportedOnly(true);
             }
+            // @ts-ignore
+            window.setStateBusy(false);
+            (window as any).designerApp = this;
         }).catch(err =>
             this.toast("Error", err.text, 'danger')
         );
@@ -215,9 +225,9 @@ class App extends React.Component<Props, State> {
                 <>
                     <Flex direction={{default: "row"}} style={{width: "100%", height: "100%"}}
                           alignItems={{default: "alignItemsStretch"}} spaceItems={{default: 'spaceItemsNone'}}>
-                        <FlexItem>
+                        {/* <FlexItem>
                             {this.pageNav()}
-                        </FlexItem>
+                        </FlexItem> */}
                         <FlexItem flex={{default: "flex_2"}} style={{height: "100%"}}>
                             {loaded !== true && this.getSpinner()}
                             {loaded === true && this.getPage()}

@@ -41,6 +41,12 @@ interface State {
 
 export class DesignerPage extends React.Component<Props, State> {
 
+    constructor(props: Props, state: State) {
+        super(props);
+        (globalThis as any).download = this.download;
+        (globalThis as any).getFile = this.getFile;
+    }
+
     public state: State = {
         mode: 'design',
     };
@@ -60,6 +66,14 @@ export class DesignerPage extends React.Component<Props, State> {
             a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(yaml));
             a.click();
         }
+    }
+
+    getFile = () => {
+        const {name, yaml} = this.props;
+        return { 
+            'name': name, 
+            'content': yaml 
+        };
     }
 
     downloadImage = () => {
@@ -106,7 +120,7 @@ export class DesignerPage extends React.Component<Props, State> {
         const {mode} = this.state;
         return (
             <PageSection className="kamelet-section designer-page" padding={{default: 'noPadding'}}>
-                <PageSection className="tools-section" padding={{default: 'noPadding'}}
+                {/* <PageSection className="tools-section" padding={{default: 'noPadding'}}
                              style={{backgroundColor:"transparent", paddingLeft: "var(--pf-c-page__main-section--PaddingLeft)"}}>
                     <Flex className="tools" justifyContent={{default: 'justifyContentSpaceBetween'}}>
                         <FlexItem>
@@ -143,7 +157,7 @@ export class DesignerPage extends React.Component<Props, State> {
                             </Toolbar>
                         </FlexItem>
                     </Flex>
-                </PageSection>
+                </PageSection> */}
                 {mode === 'design' && this.getDesigner()}
                 {mode === 'code'  && this.getEditor()}
             </PageSection>
