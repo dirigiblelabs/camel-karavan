@@ -69,15 +69,15 @@ export function App() {
         const dirigibleResult = fetchFileFromDirigible();
         Promise.all([
             // -------- For Dirigible run use these
-            // fetch("designer/kamelets/kamelets.yaml"),
-            // fetch("designer/components/components.json"),
-            // fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
-            // fetch("designer/snippets/org.apache.camel.Processor"),
+            fetch("designer/kamelets/kamelets.yaml"),
+            fetch("designer/components/components.json"),
+            fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
+            fetch("designer/snippets/org.apache.camel.Processor"),
             // -------- For Local run use these
-            fetch("kamelets/kamelets.yaml"),
-            fetch("components/components.json"),
-            fetch("snippets/org.apache.camel.AggregationStrategy"),
-            fetch("snippets/org.apache.camel.Processor"),
+            // fetch("kamelets/kamelets.yaml"),
+            // fetch("components/components.json"),
+            // fetch("snippets/org.apache.camel.AggregationStrategy"),
+            // fetch("snippets/org.apache.camel.Processor"),
             // --------------------------------------
             dirigibleResult.promise,
             // fetch("components/blocked-components.properties"),
@@ -160,7 +160,7 @@ export function App() {
     }
 
     function attachFunctionsVisibleToDirigibleEditor() {
-        (globalThis as any).toggleDark = toggleDarkFromDirigible;
+        (globalThis as any).toggleDarkFromDirigible = toggleDarkFromDirigible;
         return () => {
             delete (globalThis as any).toggleDarkFromDirigible;
         };
