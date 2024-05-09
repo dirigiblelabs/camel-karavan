@@ -63,19 +63,23 @@ export function App() {
     const [key, setKey] = useState<string>('');
     const [yaml, setYaml] = useState<string>('');
     const [loaded, setLoaded] = useState<boolean>(false);
+    const [darkMode, setDarkMode] = useState(false);
 
     useEffect(() => {
-        // @ts-ignore
-        const fileName = window.getFileName();
-        // @ts-ignore
-        const baseUrl = window.getBaseUrl();
+        const dirigibleResult = fetchFileFromDirigible();
         Promise.all([
-            fetch("designer/kamelets/kamelets.yaml"),
-            fetch("designer/components/components.json"),
-            fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
-            fetch("designer/snippets/org.apache.camel.Processor"),
-            fetch("designer/example/demo.camel.yaml"),
-            fetch(baseUrl+fileName),
+            // -------- For Dirigible run use these
+            // fetch("designer/kamelets/kamelets.yaml"),
+            // fetch("designer/components/components.json"),
+            // fetch("designer/snippets/org.apache.camel.AggregationStrategy"),
+            // fetch("designer/snippets/org.apache.camel.Processor"),
+            // -------- For Local run use these
+            fetch("kamelets/kamelets.yaml"),
+            fetch("components/components.json"),
+            fetch("snippets/org.apache.camel.AggregationStrategy"),
+            fetch("snippets/org.apache.camel.Processor"),
+            // --------------------------------------
+            dirigibleResult.promise,
             // fetch("components/blocked-components.properties"),
             // fetch("kamelets/blocked-kamelets.properties")
             // fetch("example/aws-cloudwatch-sink.kamelet.yaml")
@@ -83,7 +87,7 @@ export function App() {
             //fetch("components/supported-components.json"),
             
         ]).then(responses =>
-            Promise.all(responses.map(response => response.text()))
+            Promise.all(responses.map(response => response ? response.text() : ''))
         ).then(data => {
             const kamelets: string[] = [];
             data[0].split("\n---\n").map(c => c.trim()).forEach(z => kamelets.push(z));
@@ -93,7 +97,7 @@ export function App() {
             JSON.parse(data[1]).forEach((c: any) => jsons.push(JSON.stringify(c)));
             ComponentApi.saveComponents(jsons, true);
             
-            setName(fileName);
+            setName(dirigibleResult.fileName);
             setLoaded(true);
 
             TemplateApi.saveTemplate("org.apache.camel.AggregationStrategy", data[2]);
@@ -101,7 +105,7 @@ export function App() {
             
             if (data[4]) {
                 setYaml(data[4]);
-                setName("demo.camel.yaml");
+                setName(dirigibleResult.fileName);
             }
             if (data[5]) {
                 ComponentApi.saveBlockedComponentNames(data[5].split('\r\n'));
@@ -118,16 +122,57 @@ export function App() {
             EventBus.sendAlert("Error", err.text, 'danger')
         );
 
-        // Attach the reference to the window object and add a cleanup function
-        (window as any).designerApp = App;
-        return () => {
-            delete (window as any).designerApp;
-        };
+        setDirigibleEditorBusyFalse();
+        attachFunctionsVisibleToDirigibleEditor();
     });
 
     function save(filename: string, yaml: string, propertyOnly: boolean) {
-        // console.log(yaml);
+        sendFileChangeToDirigible(yaml)
     }
+
+    // Dirigible utils -----------------------------------------
+
+    function fetchFileFromDirigible() {
+        let fetchPromise: Promise<Response | null> = Promise.resolve(null);
+        let fileName = "";
+        // @ts-ignore
+        if (typeof window.getFileName === 'function' && typeof window.getBaseUrl === 'function') {
+            // @ts-ignore
+            fileName = window.getFileName();
+            // @ts-ignore
+            const baseUrl = window.getBaseUrl();
+            fetchPromise = fetch(baseUrl + fileName);
+        }
+        return { fileName: fileName, promise: fetchPromise }
+    }
+
+    function setDirigibleEditorBusyFalse() {
+        if ((window as any).setStateBusy && typeof (window as any).setStateBusy === 'function') {
+            (window as any).setStateBusy(false);
+        }
+    }
+
+    function sendFileChangeToDirigible(yaml: string) {
+        // Update file contents in Dirigible Editor on file change
+        if ((window as any).onFileChanged && typeof (window as any).onFileChanged === 'function') {
+            (window as any).onFileChanged(yaml);
+        }
+    }
+
+    function attachFunctionsVisibleToDirigibleEditor() {
+        (globalThis as any).toggleDark = toggleDarkFromDirigible;
+        return () => {
+            delete (globalThis as any).toggleDarkFromDirigible;
+        };
+    }
+
+    function toggleDarkFromDirigible() {
+        // Toggle designer dark mode
+        document.body.classList.toggle('vscode-dark');
+        setDarkMode(prevMode => !prevMode);
+    }
+
+    // End Dirigible utils -----------------------------------------
 
     function getSpinner() {
         return (
@@ -212,9 +257,10 @@ export function App() {
             <Notification/>
             <Flex direction={{default: "row"}} style={{width: "100%", height: "100%"}}
                   alignItems={{default: "alignItemsStretch"}} spaceItems={{default: 'spaceItemsNone'}}>
+                {/* * REMOVED FOR DIRIGIBLE TRIM: 
                 <FlexItem>
                     {pageNav()}
-                </FlexItem>
+                </FlexItem> */}
                 <FlexItem flex={{default: "flex_2"}} style={{height: "100%"}}>
                     {!loaded && getSpinner()}
                     {loaded && getPage()}

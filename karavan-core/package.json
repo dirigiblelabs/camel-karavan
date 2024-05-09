@@ -40,6 +40,7 @@
     "@types/uuid": "^9.0.5",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1",
+    "undici-types": "^6.13.0",
     "uuid": "9.0.1"
   },
   "devDependencies": {
